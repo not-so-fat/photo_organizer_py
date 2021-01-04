@@ -1,0 +1,8 @@
+raw_extension: "RAF"
+jpeg_extension: "JPG"
+input_directory: null
+save_directory:
+  jpeg: null
+  raw_for_backup: null
+  raw_for_edit: null
+delete_directory: null
