@@ -48,8 +48,9 @@ By this idea, this app moves files based on rating.
 ## How to use GUI
 
 - (If `input_directory` is null) app asks you to specify directory on GUI
-- You can operate app by ***your keyboard*** (no buttons there yet)
-    - Right / Left key shows next / previous image
+- You can operate app by *your keyboard or buttons on the screen
+    - Right / Left key shows next / previous photo
+    - "r" / "l" rotates photo
     - 0 / 1 / 2 / 3 / 4 key rate your photo
     - Return key starts file transfer, and terminates app
     - ESC key just terminates app

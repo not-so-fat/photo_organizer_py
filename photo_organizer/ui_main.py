@@ -64,7 +64,11 @@ class PhotoOrganizer(object):
         self.tk_root.bind('<Escape>', self.ask_quit)
         self.tk_root.bind('<Left>', self.previous_image)
         self.tk_root.bind('<Right>', self.next_image)
+        self.tk_root.bind('b', self.previous_image)
+        self.tk_root.bind('n', self.next_image)
         self.tk_root.bind('<Return>', self.move_photos)
+        self.tk_root.bind('r', self.rotate_right)
+        self.tk_root.bind('l', self.rotate_left)
         for index in RATINGS.keys():
             self.tk_root.bind(str(index), self.rate_action)
 
@@ -155,6 +159,7 @@ class PhotoOrganizer(object):
     def show_image(self):
         image_path = self.catalog.get_jpeg_path(self.current_image_index)
         pil_image = Image.open(image_path)
+        pil_image = pil_image.rotate(self.catalog.get_angle(self.current_image_index), expand=True)
         pil_image, new_x, new_y = photo_size_adjuster.get_new_image(
             pil_image, int(self.photo_canvas['height']), int(self.photo_canvas["width"])
         )
@@ -164,6 +169,14 @@ class PhotoOrganizer(object):
         self.tk_root.title("Photo Organizer ({})".format(os.path.split(image_path)[-1]))
         self.update_image_counter_label()
         self.update_rating_display()
+
+    def rotate_left(self, event=None):
+        self.catalog.update_angle(self.current_image_index, -90)
+        self.show_image()
+
+    def rotate_right(self, event=None):
+        self.catalog.update_angle(self.current_image_index, 90)
+        self.show_image()
 
     def update_image_counter_label(self):
         self.image_counter_label['text'] = ' {} / {} '.format(self.current_image_index + 1, self.total_images)

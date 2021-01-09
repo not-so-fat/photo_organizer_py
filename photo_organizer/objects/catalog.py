@@ -20,6 +20,7 @@ class Catalog(object):
         self.only_jpegs = list(self.catalog_df[self.catalog_df["raw_path"].isnull()]["photo_id"])
         self.catalog_df = self.catalog_df[~self.catalog_df["raw_path"].isnull()]
         self.catalog_df["rating"] = 0
+        self.catalog_df["angle"] = 0
         self.length = len(self.catalog_df)
         self.rating_counter = {}
         self.update_rating_counter()
@@ -43,6 +44,12 @@ class Catalog(object):
 
     def get_photos_on_rating(self, rating):
         return self.catalog_df[self.catalog_df["rating"]==rating]
+
+    def get_angle(self, index):
+        return self.catalog_df.iloc[index]["angle"]
+
+    def update_angle(self, index, amount):
+        self.catalog_df.iloc[index, self.catalog_df.columns.get_loc('angle')] += amount
 
 
 def _get_raw_file_path(photo_id, image_dir, jpeg_extension, raw_extension):
