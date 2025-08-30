@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Organizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .top-bar {
+            background-color: #333;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            height: 60px;
+        }
+
+        .counter {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .rating-btn {
+            padding: 8px 16px;
+            border: 2px solid #555;
+            background-color: #444;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .rating-btn:hover {
+            background-color: #555;
+        }
+
+        .rating-btn.active {
+            background-color: #ffd700;
+            color: black;
+            border-color: #ffd700;
+        }
+
+        .move-btn {
+            padding: 10px 20px;
+            background-color: #8b0000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .move-btn:hover {
+            background-color: #a00000;
+        }
+
+        .photo-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo {
+            max-width: 95%;
+            max-height: 95%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .navigation-hints {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .rating-counts {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 24px;
+            color: #ccc;
+        }
+
+        .error {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 24px;
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .photo-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <div class="counter" id="counter">0 / 0</div>
+            <div class="rating-buttons" id="rating-buttons">
+                <!-- Rating buttons will be populated by JavaScript -->
+            </div>
+            <button class="move-btn" onclick="moveFiles()">MOVE & QUIT</button>
+        </div>
+        
+        <div class="photo-container" id="photo-container">
+            <div class="loading" id="loading">Loading...</div>
+        </div>
+        
+        <div class="navigation-hints">
+            Arrow Keys: Navigate | 0-4: Rate | R/L: Rotate | Enter: Move & Quit | Esc: Quit
+        </div>
+        
+        <div class="rating-counts" id="rating-counts">
+            <!-- Rating counts will be populated by JavaScript -->
+        </div>
+
+        <div class="photo-info" id="photo-info">
+            <!-- Photo info will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        let currentPhoto = null;
+        let totalPhotos = {{ total_photos }};
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentPhoto();
+            setupKeyboardControls();
+            createRatingButtons();
+        });
+
+        function createRatingButtons() {
+            const container = document.getElementById('rating-buttons');
+            const ratings = {{ ratings | tojson }};
+            
+            Object.entries(ratings).forEach(([rating, name]) => {
+                const btn = document.createElement('button');
+                btn.className = 'rating-btn';
+                btn.textContent = `${rating}: ${name.toUpperCase()}`;
+                btn.onclick = () => ratePhoto(parseInt(rating));
+                container.appendChild(btn);
+            });
+        }
+
+        function setupKeyboardControls() {
+            document.addEventListener('keydown', function(event) {
+                switch(event.key) {
+                    case 'ArrowLeft':
+                        navigate(-1);
+                        break;
+                    case 'ArrowRight':
+                        navigate(1);
+                        break;
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                        ratePhoto(parseInt(event.key));
+                        break;
+                    case 'r':
+                    case 'R':
+                        rotatePhoto(1);
+                        break;
+                    case 'l':
+                    case 'L':
+                        rotatePhoto(-1);
+                        break;
+                    case 'Enter':
+                        moveFiles();
+                        break;
+                    case 'Escape':
+                        if (confirm('Quit without moving files?')) {
+                            window.close();
+                        }
+                        break;
+                }
+            });
+        }
+
+        async function loadCurrentPhoto() {
+            try {
+                const response = await fetch('/api/current_photo');
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                currentPhoto = data;
+                displayPhoto(data);
+                updateUI(data);
+                
+            } catch (error) {
+                showError('Failed to load photo: ' + error.message);
+            }
+        }
+
+        function displayPhoto(data) {
+            const container = document.getElementById('photo-container');
+            const loading = document.getElementById('loading');
+            
+            // Remove loading message
+            if (loading) {
+                loading.remove();
+            }
+            
+            // Create or update image
+            let img = container.querySelector('.photo');
+            if (!img) {
+                img = document.createElement('img');
+                img.className = 'photo';
+                container.appendChild(img);
+            }
+            
+            // Set image source with cache busting
+            img.src = `/photos/${encodeURIComponent(data.filename)}?t=${Date.now()}`;
+            img.style.transform = `rotate(${data.angle}deg)`;
+            
+            img.onload = function() {
+                console.log('Image loaded successfully');
+                updatePhotoInfo(data);
+            };
+            
+            img.onerror = function() {
+                showError(`Failed to load image: ${data.filename}`);
+            };
+        }
+
+        function updatePhotoInfo(data) {
+            const infoContainer = document.getElementById('photo-info');
+            infoContainer.innerHTML = `
+                <div>File: ${data.filename}</div>
+                <div>Rating: ${data.rating}</div>
+                <div>Angle: ${data.angle}°</div>
+            `;
+        }
+
+        function updateUI(data) {
+            // Update counter
+            document.getElementById('counter').textContent = `${data.index + 1} / ${data.total}`;
+            
+            // Update rating buttons
+            const buttons = document.querySelectorAll('.rating-btn');
+            buttons.forEach((btn, index) => {
+                btn.classList.toggle('active', index === data.rating);
+            });
+            
+            // Update rating counts
+            const countsContainer = document.getElementById('rating-counts');
+            const counts = data.rating_counts;
+            countsContainer.innerHTML = Object.entries(counts)
+                .map(([rating, count]) => `${rating}: ${count}`)
+                .join(' | ');
+        }
+
+        async function navigate(direction) {
+            try {
+                const response = await fetch(`/api/navigate/${direction}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                currentPhoto = data;
+                displayPhoto(data);
+                updateUI(data);
+                
+            } catch (error) {
+                showError('Navigation failed: ' + error.message);
+            }
+        }
+
+        async function ratePhoto(rating) {
+            try {
+                const response = await fetch(`/api/rate/${rating}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                // Update rating buttons
+                const buttons = document.querySelectorAll('.rating-btn');
+                buttons.forEach((btn, index) => {
+                    btn.classList.toggle('active', index === rating);
+                });
+                
+                // Update rating counts
+                const countsContainer = document.getElementById('rating-counts');
+                const counts = data.rating_counts;
+                countsContainer.innerHTML = Object.entries(counts)
+                    .map(([rating, count]) => `${rating}: ${count}`)
+                    .join(' | ');
+                
+                // Update photo info
+                if (currentPhoto) {
+                    currentPhoto.rating = rating;
+                    updatePhotoInfo(currentPhoto);
+                }
+                
+            } catch (error) {
+                showError('Rating failed: ' + error.message);
+            }
+        }
+
+        async function rotatePhoto(direction) {
+            try {
+                const response = await fetch(`/api/rotate/${direction}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                // Update image rotation
+                const img = document.querySelector('.photo');
+                if (img) {
+                    img.style.transform = `rotate(${data.angle}deg)`;
+                }
+                
+                // Update photo info
+                if (currentPhoto) {
+                    currentPhoto.angle = data.angle;
+                    updatePhotoInfo(currentPhoto);
+                }
+                
+            } catch (error) {
+                showError('Rotation failed: ' + error.message);
+            }
+        }
+
+        async function moveFiles() {
+            if (!confirm('Move files and quit?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/move_files');
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error moving files: ' + data.error);
+                    return;
+                }
+                
+                // Show results
+                let message = 'Files moved successfully!\n\n';
+                Object.entries(data.messages).forEach(([rating, msg]) => {
+                    if (msg) {
+                        message += `Rating ${rating}: ${msg}\n`;
+                    }
+                });
+                
+                alert(message);
+                window.close();
+                
+            } catch (error) {
+                alert('Error moving files: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            const container = document.getElementById('photo-container');
+            container.innerHTML = `<div class="error">${message}</div>`;
+        }
+    </script>
+</body>
+</html>

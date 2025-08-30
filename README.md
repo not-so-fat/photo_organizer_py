@@ -1,6 +1,6 @@
 # Photo Organizer
 
-GUI app to view & rate photos, and move RAW/JPEG files based on rating.
+Web-based application to view & rate photos, and move RAW/JPEG files based on rating.
 
 
 ## Motivation
@@ -24,7 +24,7 @@ By this idea, this app moves files based on rating.
 - Put all RAW+JPEG files in a directory
     - RAW and JPEG should have the same name except for extension, i.e. "A.JPG" and "A.RAF"
     - Extension is configurable
-- Open the app and rate photos as one of "Excellent" / "OK" / "EDIT" / "BAD"
+- Open the web app and rate photos as one of "Excellent" / "OK" / "EDIT" / "BAD"
 - App move files based on rating
 
 | Rating    | RAW Destination | JPEG destination |
@@ -37,21 +37,48 @@ By this idea, this app moves files based on rating.
 
 ## Installation
 
-- Please install python, and install dependent libraries in `requirements.txt`
-- Please fill fields in `config.yaml`
-    - `raw_extension` / `jpeg_extension`: Extension for RAW / JPEG files
-    - `input_directory`: Input directory for RAW+JPEG files, if it is null, you can configure it on GUI
-    - `save_directory`: Please specify where you want to save RAW / JPEG files (refer above table)
-    - `delete_directory`: To be safe, instead of deleting files we move files into specified directory
-- RUN `python ui_main.py config.yaml`
-    
-## How to use GUI
+1. Install Python 3.9 or later
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Configure `config.yaml`:
+   - `raw_extension` / `jpeg_extension`: Extension for RAW / JPEG files
+   - `input_directory`: Input directory for RAW+JPEG files
+   - `save_directory`: Please specify where you want to save RAW / JPEG files (refer above table)
+   - `delete_directory`: To be safe, instead of deleting files we move files into specified directory
 
-- (If `input_directory` is null) app asks you to specify directory on GUI
-- You can operate app by *your keyboard or buttons on the screen
-    - Right / Left key shows next / previous photo
-    - "r" / "l" rotates photo
-    - 0 / 1 / 2 / 3 / 4 key rate your photo
-    - Return key starts file transfer, and terminates app
-    - ESC key just terminates app
+## How to use
+
+1. Start the web application:
+   ```bash
+   python -m photo_organizer.web_app config.yaml
+   ```
+
+2. Open your web browser and navigate to `http://localhost:5000`
+
+3. Use keyboard shortcuts to operate the app:
+   - **Left/Right Arrow Keys**: Navigate to previous/next photo
+   - **Number Keys (0-4)**: Rate photos
+     - 0: Undefined
+     - 1: Bad
+     - 2: Edit
+     - 3: OK
+     - 4: Excellent
+   - **R Key**: Rotate photo
+   - **Enter Key**: Move rated photos to their destinations and exit
+   - **Escape Key**: Exit without moving files
+
+## Features
+
+- **Cross-platform**: Works on any OS with a web browser
+- **Keyboard-focused**: Optimized for keyboard navigation and rating
+- **Photo display**: Shows photos with proper scaling to fit the screen
+- **File management**: Automatically moves RAW/JPEG pairs based on ratings
+- **Safe operation**: Moves files to a delete directory instead of permanent deletion
 

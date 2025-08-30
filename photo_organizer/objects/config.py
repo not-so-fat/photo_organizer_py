@@ -14,8 +14,8 @@ class Config(object):
 
         assert self.jpeg_extension is not None, "`jpeg_extension` is mandatory in config"
         assert self.raw_extension is not None, "`raw_extension` is mandatory in config"
-        assert Path(self.raw_backup_directory).exists(), "No such save directory for `raw_for_backup`"
-        assert Path(self.raw_edit_directory).exists(), "No such save directory for `raw_for_edit`"
+        assert Path(self.raw_backup_directory).exists(), f"No such save directory for `raw_for_backup`: {self.raw_backup_directory}"
+        assert Path(self.raw_edit_directory).exists(), f"No such save directory for `raw_for_edit`: {self.raw_for_edit_directory}"
         assert Path(self.jpeg_directory).exists(), "No such save directory for `jpeg`"
         assert Path(self.delete_directory).exists(), "No such `delete_directory`"
 

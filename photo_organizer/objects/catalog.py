@@ -28,6 +28,9 @@ class Catalog(object):
     def get_jpeg_path(self, index):
         return self.catalog_df.iloc[index]["jpeg_path"]
 
+    def get_raw_path(self, index):
+        return self.catalog_df.iloc[index]["raw_path"]
+
     def rate_photo(self, index, rating):
         self.catalog_df.iloc[index, self.catalog_df.columns.get_loc('rating')] = rating
         self.update_rating_counter()
